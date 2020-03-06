@@ -10,7 +10,7 @@ async function getTxFee(tx)
 contract("Auction", acc => {
     let instance;
 
-    beforeEach('setup contract instance', async () => {
+    before('setup contract instance', async () => {
         instance = await Auction.deployed();
     });
 
@@ -42,6 +42,9 @@ contract("Auction", acc => {
         await instance.bid({from: acc[1], value: toWei('4')});
         assert.equal(await instance.highestBid(), toWei('4'));
         assert.equal(await instance.highestBidder(), acc[1]);
+
+        // Balance of the contract is correct
+        assert.equal(await web3.eth.getBalance(instance.address), toWei('10'));
     });
 
     it('should handle failed bid', async function () {
@@ -57,6 +60,9 @@ contract("Auction", acc => {
         // Highest bid is still 4 ETH
         assert.equal(await instance.highestBid(), toWei('4'));
         assert.equal(await instance.highestBidder(), acc[1]);
+
+        // Balance of the contract is unchanged
+        assert.equal(await web3.eth.getBalance(instance.address), toWei('10'));
     });
 
     it('should withdraw successfully', async function () {
@@ -114,10 +120,40 @@ contract("Auction", acc => {
             await instance.auctionEnd({from: acc[0]});
         }
         catch (e) {
-            console.log(e);
             err = true;
         }
 
         assert(err);
+    });
+});
+
+const Attacker = artifacts.require("Attacker");
+
+contract("Reentrancy attack", acc => {
+    let auction, attacker;
+
+    it('should tolerate the reentrancy attack', async () => {
+        auction = await Auction.deployed();
+        // console.log(auction.address);
+        attacker = await Attacker.new(auction.address);
+        // console.log(attacker.address);
+
+        // send 1 ETH
+        await attacker.sendBid({from: acc[5], value: toWei('1')});
+
+        // acc[1] bid 10 ETH
+        await auction.bid({from: acc[1], value: toWei('10')});
+
+        // attack
+        await attacker.collect({from: acc[5]});
+
+        let ret = await attacker.ret();
+        assert(ret < 2);
+
+        if (ret == 1)
+        {
+            assert.equal(await web3.eth.getBalance(attacker.address), toWei('1'));
+            assert.equal(await web3.eth.getBalance(auction.address), toWei('10'));
+        }
     });
 });

@@ -77,6 +77,15 @@ contract Auction {
                 pendingReturns[msg.sender] = amount;
                 return false;
             }
+
+
+//            (bool success, ) = msg.sender.call.value(amount)("");
+//            if (!success) {
+//                pendingReturns[msg.sender] = amount;
+//                return false;
+//            }
+//            pendingReturns[msg.sender] = 0;
+
         }
         return true;
     }
