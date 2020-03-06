@@ -15,6 +15,7 @@ contract Auction {
     // Constructor
     constructor() public {
         beneficiary = msg.sender;
+        ended = false;
     }
 
     /// Bid on the auction with the value sent
@@ -86,6 +87,8 @@ contract Auction {
         // TODO make sure that only the beneficiary can trigger this function. Use "require"
 
         // TODO send money to the beneficiary account. Make sure that it can't call this auctionEnd() multiple times to drain money
+        require(msg.sender == beneficiary, "only the beneficiary can trigger this function");
+        require(ended == false, "auction is ended");
 
         // 2. Effects
         ended = true;
