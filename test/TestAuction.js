@@ -83,15 +83,6 @@ contract("Auction", acc => {
 
         assert.equal(new BN(toWei('1')).add(new BN(prevBal)).sub(new BN(fee)).toString(), postBal);
 
-        // acc[3] withdraw, expect 3 ETH
-        prevBal = await web3.eth.getBalance(acc[3]);
-        tx = await instance.withdraw({from: acc[3]});
-
-        postBal = await web3.eth.getBalance(acc[3]);
-        fee = await getTxFee(tx);
-
-        assert.equal(new BN(toWei('3')).add(new BN(prevBal)).sub(new BN(fee)).toString(), postBal);
-
         // acc[2] withdraw, expect 6 ETH
         prevBal = await web3.eth.getBalance(acc[2]);
         tx = await instance.withdraw({from: acc[2]});
@@ -101,16 +92,25 @@ contract("Auction", acc => {
 
         assert.equal(new BN(toWei('6')).add(new BN(prevBal)).sub(new BN(fee)).toString(), postBal);
 
+        // acc[3] withdraw, expect 3 ETH
+        prevBal = await web3.eth.getBalance(acc[3]);
+        tx = await instance.withdraw({from: acc[3]});
+
+        postBal = await web3.eth.getBalance(acc[3]);
+        fee = await getTxFee(tx);
+
+        assert.equal(new BN(toWei('3')).add(new BN(prevBal)).sub(new BN(fee)).toString(), postBal);
+
         // acc[3] withdraw, expect nothing
         prevBal = postBal;
         try
         {
-            tx = await instance.withdraw({from: acc[2]});
+            tx = await instance.withdraw({from: acc[3]});
         }catch (e) {
             return ;
         }
         fee = await getTxFee(tx);
-        postBal = await web3.eth.getBalance(acc[2]);
+        postBal = await web3.eth.getBalance(acc[3]);
 
         assert.equal(new BN(prevBal).sub(new BN(fee)).toString(), postBal);
     });
