@@ -21,10 +21,8 @@ contract Auction {
 
     /// Bid on the auction with the value sent together with this transaction.
     function bid() public payable {
-        require(
-            msg.value > highestBid,
-            "There already is a higher bid."
-        );
+        require(ended == false, "auction is ended");
+        require(msg.value > highestBid);
         
         if (highestBid != 0) {
             pendingReturns[highestBidder] += highestBid;
@@ -61,8 +59,11 @@ contract Auction {
 
         ended = true;
 
+        // send highest bid to the beneficiary
         (bool success, ) = beneficiary.call.value(highestBid)("");
+
         if (!success) {
+            ended = false;
             revert("Error sending to the beneficiary");
         }
     }
